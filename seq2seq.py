@@ -3,8 +3,6 @@ import numpy as np
 import json
 from lstm import lstm_cell, linear
 
-questions = np.load('data/questions.npy')
-answers = np.load('data/answers.npy')
 meta = json.load(open('data/meta.json'))
 w2idx, idx2w = meta['w2idx'], meta['idx2w']
 vocab_size = len(w2idx)
@@ -66,4 +64,4 @@ for i in xrange(1, 1000):
     batch_as = idx_a[batch*batch_size:(batch+1)*batch_size]
 
     _, loss = sess.run([optimizer, total_loss], feed_dict={question:batch_qs, answer:batch_as})
-  print loss
+    print loss
