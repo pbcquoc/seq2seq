@@ -1,6 +1,9 @@
 import tensorflow as tf
 import numpy as np
 import json
+import sys
+sys.path.append('data/')
+import utils
 from lstm import lstm_cell, linear
 
 meta = json.load(open('data/meta.json'))
@@ -11,6 +14,7 @@ embedding_size = 256
 mem_size = 512
 batch_size = 16
 
+
 question = tf.placeholder(tf.int32, shape=[batch_size, encoder_unrollings])
 answer = tf.placeholder(tf.int32, shape=[batch_size, decoder_unrollings])
 answer_x = answer[:, :-1]
@@ -18,36 +22,54 @@ answer_y = tf.reshape(answer[:, 1:], [-1])
 
 embedded = tf.get_variable(name='embedded', shape=[vocab_size, embedding_size], initializer=tf.truncated_normal_initializer(mean=0.0, stddev=0.1))
 
-def encoder(cx):
+def encoder(cx, unrollings, encoder_reuse):
   outputs = []
-  with tf.variable_scope('encoder') as scope:
+  with tf.variable_scope('encoder', reuse=encoder_reuse) as scope:
     x = tf.nn.embedding_lookup(embedded, cx) # batch_size x unrolling x embedding_size
     mem = tf.constant(0.0, shape=[batch_size, mem_size], name='initial_memory')
     state = tf.constant(0.0, shape=[batch_size, mem_size], name='initial_state')
 
-    for i in range(encoder_unrollings):
+    for i in range(unrollings):
       mem, state = lstm_cell(x[:, i, :], mem, state, embedding_size, mem_size, 'lstm')
       scope.reuse_variables()
       outputs.append(mem)
 
   return outputs, state
 
-def decoder(cx, mem, state):
+def decoder(cx, mem, state, unrollings, decoder_reuse):
   outputs = []
-  with tf.variable_scope('decoder') as scope:
+  with tf.variable_scope('decoder', reuse=decoder_reuse) as scope:
     x = tf.nn.embedding_lookup(embedded, cx) 
     
-    for i in range(decoder_unrollings - 1):
+    for i in range(unrollings):
       mem, state = lstm_cell(x[:, i, :], mem, state, embedding_size, mem_size, 'lstm')
       scope.reuse_variables()
       outputs.append(mem)
 
   return outputs, state
 
-mems_encoder, state_encoder = encoder(question)
-mems_decoder, _ = decoder(answer_x, mems_encoder[-1], state_encoder)
+def max_sampling(max_length):
+  ys = []
+  x = tf.constant(w2idx['BOS'], shape=[batch_size, 1])
+
+  #with tf.variable_scope('max_sampling', reuse=True):  
+  mems_encoder, state_encoder = encoder(question, encoder_unrollings, encoder_reuse=True)
+  for _ in range(max_length):
+    mem_decoder, state_decoder = decoder(x, mems_encoder[-1], state_encoder, 1, decoder_reuse=True)
+    _y = linear(mem_decoder[0], shape=[mem_size, vocab_size], activation_fn=tf.identity, scope='linear', reuse=True)
+    y = tf.argmax(_y, axis=1)      
+    x = tf.reshape(y, [-1, 1])
+    ys.append(y)
+
+  return ys
+
+mems_encoder, state_encoder = encoder(question, encoder_unrollings, encoder_reuse=False)
+mems_decoder, _ = decoder(answer_x, mems_encoder[-1], state_encoder, decoder_unrollings - 1, decoder_reuse=False)
 logits = tf.concat(values=mems_decoder, axis=0)
-ys = linear(logits, shape=[mem_size, vocab_size], activation_fn=tf.identity, scope='linear')
+ys = linear(logits, shape=[mem_size, vocab_size], activation_fn=tf.identity, scope='linear', reuse=False)
+
+sampling = max_sampling(20)
+
 total_loss = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(logits=ys, labels=answer_y))
 
 optimizer = tf.train.AdamOptimizer(learning_rate=1e-2).minimize(total_loss)
@@ -57,11 +79,18 @@ sess.run(tf.initialize_all_variables())
 
 idx_q = np.load('data/questions.npy')
 idx_a = np.load('data/answers.npy')
+idx_q_sample = idx_q[:batch_size]
+
 print idx_q.shape, idx_a.shape
+n = 1
 for i in xrange(1, 1000):
   for batch in xrange(len(idx_q)/batch_size):
     batch_qs = idx_q[batch*batch_size:(batch+1)*batch_size]
     batch_as = idx_a[batch*batch_size:(batch+1)*batch_size]
 
     _, loss = sess.run([optimizer, total_loss], feed_dict={question:batch_qs, answer:batch_as})
-    print loss
+    if n % 100 == 0:
+      print sess.run(sampling, feed_dict={question: idx_q_sample}) 
+      print loss
+    
+    n += 1

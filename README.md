@@ -5,6 +5,8 @@
   In training state, 
 
 # Dependencies
-  Python 2.7
-  Tensorflow 1.xx
+  * Python 2.7
+  * Tensorflow 1.xx
   I only test it on Ubuntu 16.04
+
+# Training

@@ -16,8 +16,8 @@ def lstm_cell(i, m, state, embedding_size, mem_size, scope):
     
     return out_gate*tf.tanh(state), state
 
-def linear(x, shape, activation_fn, scope):
-  with tf.variable_scope(scope):
+def linear(x, shape, activation_fn, scope, reuse):
+  with tf.variable_scope(scope, reuse=reuse):
     W = tf.get_variable(name='W', shape=shape, initializer=tf.truncated_normal_initializer(mean=0.0, stddev=0.1))
     b = tf.get_variable(name='b', shape=shape[-1], initializer=tf.constant_initializer(0))
     h = tf.matmul(x, W) + b
