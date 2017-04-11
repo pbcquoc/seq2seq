@@ -77,6 +77,7 @@ def preprocess():
 
 def idxs2str(idxs, idx2w):
   return " ".join(idx2w[str(c)] for c in idxs if idx2w[str(c)] not in [PAD, BOS, EOS])
+  
 
 def str2idxs(str, w2idx):
   filtered = []

@@ -70,6 +70,8 @@ ys = linear(logits, shape=[mem_size, vocab_size], activation_fn=tf.identity, sco
 
 sampling = max_sampling(20)
 
+var =  tf.get_collection(tf.GraphKeys.VARIABLES)
+print [v.name for v in var], len(var)
 total_loss = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(logits=ys, labels=answer_y))
 
 optimizer = tf.train.AdamOptimizer(learning_rate=1e-2).minimize(total_loss)
@@ -90,7 +92,11 @@ for i in xrange(1, 1000):
 
     _, loss = sess.run([optimizer, total_loss], feed_dict={question:batch_qs, answer:batch_as})
     if n % 100 == 0:
-      print sess.run(sampling, feed_dict={question: idx_q_sample}) 
+      ys_sampling = sess.run(sampling, feed_dict={question: idx_q_sample}) 
+      for y_sampling in ys_sampling:
+        a_sampling = utils.idxs2str(y_sampling, idx2w)
+        print a_sampling, '\n'
+
       print loss
     
     n += 1
