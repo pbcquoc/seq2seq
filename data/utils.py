@@ -66,6 +66,8 @@ def preprocess():
   print idx_q[0], idx_a[0]
   
   # serialize
+  #reverse direction questions
+  idx_q = np.fliplr(idx_q)
   np.save('questions.npy', idx_q)  
   np.save('answers.npy', idx_a)
   with open('meta.json', 'w') as meta:
@@ -76,8 +78,9 @@ def preprocess():
 
 
 def idxs2str(idxs, idx2w):
-  return " ".join(idx2w[str(c)] for c in idxs if idx2w[str(c)] not in [PAD, BOS, EOS])
-  
+  #return " ".join(idx2w[str(c)] for c in idxs if idx2w[str(c)] not in [PAD, BOS, EOS])
+  return " ".join(idx2w[str(c)] for c in idxs if idx2w[str(c)])
+
 
 def str2idxs(str, w2idx):
   filtered = []

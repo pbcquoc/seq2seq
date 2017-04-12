@@ -9,6 +9,8 @@ from lstm import lstm_cell, linear
 meta = json.load(open('data/meta.json'))
 w2idx, idx2w = meta['w2idx'], meta['idx2w']
 vocab_size = len(w2idx)
+PAD = w2idx['_']
+
 encoder_unrollings, decoder_unrollings  = 20, 22
 embedding_size = 256
 mem_size = 512
@@ -54,10 +56,15 @@ def max_sampling(max_length):
 
   #with tf.variable_scope('max_sampling', reuse=True):  
   mems_encoder, state_encoder = encoder(question, encoder_unrollings, encoder_reuse=True)
+
+  # assign last mem and state to decoder net
+  mem_decoder = [mems_encoder[-1]]
+  state_decoder = state_encoder
   for _ in range(max_length):
-    mem_decoder, state_decoder = decoder(x, mems_encoder[-1], state_encoder, 1, decoder_reuse=True)
+    mem_decoder, state_decoder = decoder(x, mem_decoder[-1], state_decoder, 1, decoder_reuse=True)
     _y = linear(mem_decoder[0], shape=[mem_size, vocab_size], activation_fn=tf.identity, scope='linear', reuse=True)
-    y = tf.argmax(_y, axis=1)      
+    y = tf.argmax(_y, axis=1)
+
     x = tf.reshape(y, [-1, 1])
     ys.append(y)
 
@@ -68,28 +75,39 @@ mems_decoder, _ = decoder(answer_x, mems_encoder[-1], state_encoder, decoder_unr
 logits = tf.concat(values=mems_decoder, axis=0)
 ys = linear(logits, shape=[mem_size, vocab_size], activation_fn=tf.identity, scope='linear', reuse=False)
 
+mask = tf.cast(tf.not_equal(answer_y, PAD), tf.float32)
+total_loss = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=ys, labels=answer_y)*mask
+total_loss = tf.reduce_mean(total_loss, name='total_loss')
+
 sampling = max_sampling(20)
 
 var =  tf.get_collection(tf.GraphKeys.VARIABLES)
 print [v.name for v in var], len(var)
-total_loss = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(logits=ys, labels=answer_y))
 
-optimizer = tf.train.AdamOptimizer(learning_rate=1e-2).minimize(total_loss)
+optimizer = tf.train.AdamOptimizer(learning_rate=1e-5).minimize(total_loss)
 
 sess = tf.Session()
 sess.run(tf.initialize_all_variables())
 
+
+
+###########
+summary_writer = tf.summary.FileWriter('logs/',graph_def=sess.graph_def)
+
+#######
 idx_q = np.load('data/questions.npy')
 idx_a = np.load('data/answers.npy')
 idx_q_sample = idx_q[:batch_size]
+for q in idx_q_sample:
+  print utils.idxs2str(q, idx2w)
 
 print idx_q.shape, idx_a.shape
-n = 1
+n = 0
 for i in xrange(1, 1000):
   for batch in xrange(len(idx_q)/batch_size):
     batch_qs = idx_q[batch*batch_size:(batch+1)*batch_size]
     batch_as = idx_a[batch*batch_size:(batch+1)*batch_size]
-
+    
     _, loss = sess.run([optimizer, total_loss], feed_dict={question:batch_qs, answer:batch_as})
     if n % 100 == 0:
       ys_sampling = sess.run(sampling, feed_dict={question: idx_q_sample}) 
@@ -97,6 +115,6 @@ for i in xrange(1, 1000):
         a_sampling = utils.idxs2str(y_sampling, idx2w)
         print a_sampling, '\n'
 
-      print loss
+      print 'Iter', n, ': ', loss
     
     n += 1
