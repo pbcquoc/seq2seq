@@ -52,21 +52,22 @@ def decoder(cx, mem, state, unrollings, decoder_reuse):
 
 def max_sampling(max_length):
   ys = []
-  x = tf.constant(w2idx['BOS'], shape=[batch_size, 1])
+  with tf.name_scope('max_sampling'):
+    x = tf.constant(w2idx['BOS'], shape=[batch_size, 1])
 
-  #with tf.variable_scope('max_sampling', reuse=True):  
-  mems_encoder, state_encoder = encoder(question, encoder_unrollings, encoder_reuse=True)
+    #with tf.variable_scope('max_sampling', reuse=True):  
+    mems_encoder, state_encoder = encoder(question, encoder_unrollings, encoder_reuse=True)
 
-  # assign last mem and state to decoder net
-  mem_decoder = [mems_encoder[-1]]
-  state_decoder = state_encoder
-  for _ in range(max_length):
-    mem_decoder, state_decoder = decoder(x, mem_decoder[-1], state_decoder, 1, decoder_reuse=True)
-    _y = linear(mem_decoder[0], shape=[mem_size, vocab_size], activation_fn=tf.identity, scope='linear', reuse=True)
-    y = tf.argmax(_y, axis=1)
+    # assign last mem and state to decoder net
+    mem_decoder = [mems_encoder[-1]]
+    state_decoder = state_encoder
+    for _ in range(max_length):
+      mem_decoder, state_decoder = decoder(x, mem_decoder[-1], state_decoder, 1, decoder_reuse=True)
+      _y = linear(mem_decoder[0], shape=[mem_size, vocab_size], activation_fn=tf.identity, scope='linear', reuse=True)
+      y = tf.argmax(_y, axis=1)
 
-    x = tf.reshape(y, [-1, 1])
-    ys.append(y)
+      x = tf.reshape(y, [-1, 1])
+      ys.append(y)
 
   return ys
 
@@ -110,8 +111,8 @@ for i in xrange(1, 1000):
     
     _, loss = sess.run([optimizer, total_loss], feed_dict={question:batch_qs, answer:batch_as})
     if n % 100 == 0:
-      ys_sampling = sess.run(sampling, feed_dict={question: idx_q_sample}) 
-      for y_sampling in ys_sampling:
+      ys_sampling = sess.run(sampling, feed_dict={question: idx_q_sample})
+      for y_sampling in np.transpose(ys_sampling):
         a_sampling = utils.idxs2str(y_sampling, idx2w)
         print a_sampling, '\n'
 
