@@ -11,5 +11,5 @@
   * I only test it on Ubuntu 16.04
 
 # Training
-
+  I use tensorflow so if you haven't installed tensorflow yet, just following the link and install approriate tensorflow for your pc
 # Evaluate
