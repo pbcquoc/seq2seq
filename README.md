@@ -1,4 +1,4 @@
-# seq2seq
+# Making chatbot using naive seq2seq model
 
 # Overview
   The input is twitter chat that contains questions and their responsed answers. I clean all messy characters.
