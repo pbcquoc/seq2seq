@@ -45,6 +45,8 @@ def preprocess():
   # make vocabulary  
   counter = Counter(all_words)
   vocabs = counter.most_common(VOCAB_SIZE)
+  common_count = [c[1] for c in vocabs]
+  print 1.0*sum(common_count)/len(all_words)
   vocabs = [c[0] for c in vocabs] + [UNK]
   w2idx = dict(zip(vocabs, range(len(vocabs))))
   idx2w = dict(zip(range(len(vocabs)), vocabs))
