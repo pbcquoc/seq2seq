@@ -14,7 +14,7 @@ PAD = w2idx['_']
 encoder_unrollings, decoder_unrollings  = 20, 22
 embedding_size = 256
 mem_size = 512
-batch_size = 16
+batch_size = 256
 
 
 question = tf.placeholder(tf.int32, shape=[batch_size, encoder_unrollings])
@@ -111,7 +111,7 @@ for i in xrange(1, 1000):
     _, loss = sess.run([optimizer, total_loss], feed_dict={question:batch_qs, answer:batch_as})
     if n % 100 == 0:
       ys_sampling = sess.run(sampling, feed_dict={question: idx_q_sample}) 
-      for y_sampling in ys_sampling:
+      for y_sampling in np.transpose(ys_sampling):
         a_sampling = utils.idxs2str(y_sampling, idx2w)
         print a_sampling, '\n'
 
