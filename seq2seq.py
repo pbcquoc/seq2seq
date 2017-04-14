@@ -93,7 +93,7 @@ sess.run(tf.initialize_all_variables())
 
 ###########
 summary_writer = tf.summary.FileWriter('logs/',graph_def=sess.graph_def)
-
+saver = tf.train.Saver()
 #######
 idx_q = np.load('data/questions.npy')
 idx_a = np.load('data/answers.npy')
@@ -116,5 +116,6 @@ for i in xrange(1, 1000):
         print a_sampling
 
       print 'Iter', n, ': ', loss
-    
+    if n % 1000 == 0:
+      saver.save(sess, 'models/chatbot_{:04d}.cpk'.format(n))
     n += 1
