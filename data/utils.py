@@ -1,6 +1,7 @@
 import numpy as np
 import json
 from collections import Counter
+from nltk.translate.bleu_score import sentence_bleu
 
 EN_WHITELIST = '0123456789abcdefghijklmnopqrstuvwxyz '
 EN_BLACKLIST = '!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~\''
@@ -14,9 +15,9 @@ VOCAB_SIZE = 6000
 
 limit = {
         'maxq' : 20,
-        'minq' : 0,
+        'minq' : 5,
         'maxa' : 20,
-        'mina' : 3
+        'mina' : 5
         }
 
 fi = 'twitter_en.txt'
@@ -81,8 +82,18 @@ def preprocess():
 
 def idxs2str(idxs, idx2w):
   #return " ".join(idx2w[str(c)] for c in idxs if idx2w[str(c)] not in [PAD, BOS, EOS])
-  return " ".join(idx2w[str(c)] for c in idxs if idx2w[str(c)])
+  return " ".join(idx2w[str(c)] for c in idxs)
 
+def idxs2chars(idxs, idx2w):
+  chars = []
+  for idx in idxs:
+    char = idx2w[str(idx)]
+    if char == EOS:
+      break
+    if char not in [PAD, EOS]:
+      chars.append(char)
+
+  return chars
 
 def str2idxs(str, w2idx):
   filtered = []
@@ -93,3 +104,12 @@ def str2idxs(str, w2idx):
   
   return filtered
 
+def bleu_score(predicts, actuals, idx2w):
+  str_preds =  [idx2w[str(char)] for sentence in predicts for char in sentence]
+  str_actual = [idx2w[str(char)] for sentence in actuals for char in sentence]
+  scores = []
+  for i in xrange(len(str_preds)):
+    score = sentence_bleu(str_actual[i], str_preds[i])
+    scores.append(score)
+
+  return np.mean(scores)

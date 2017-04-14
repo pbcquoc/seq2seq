@@ -97,6 +97,13 @@ saver = tf.train.Saver()
 #######
 idx_q = np.load('data/questions.npy')
 idx_a = np.load('data/answers.npy')
+train_q, train_a = idx_q[:-5000], idx_a[:-5000]
+test_q, test_a = idx_q[-5000:], idx_a[-5000:]
+
+#######
+pred_a = []
+actual_a = test_a[:batch_size*len(test_q)/batch_size]
+####
 idx_q_sample = idx_q[:batch_size]
 for q in idx_q_sample:
   print utils.idxs2str(q, idx2w)
@@ -104,11 +111,26 @@ for q in idx_q_sample:
 print idx_q.shape, idx_a.shape
 n = 0
 for i in xrange(1, 1000):
-  for batch in xrange(len(idx_q)/batch_size):
-    batch_qs = idx_q[batch*batch_size:(batch+1)*batch_size]
-    batch_as = idx_a[batch*batch_size:(batch+1)*batch_size]
+  for batch in xrange(len(train_q)/batch_size):
+    batch_qs = train_q[batch*batch_size:(batch+1)*batch_size]
+    batch_as = train_a[batch*batch_size:(batch+1)*batch_size]
     
     _, loss = sess.run([optimizer, total_loss], feed_dict={question:batch_qs, answer:batch_as})
+    if n % 100 == 0:
+      for batch in xrange(len(test_q)/batch_size):
+        batch_qs = train_q[batch*batch_size:(batch+1)*batch_size]
+
+        ys_sampling = sess.run(sampling, feed_dict={question: batch_qs})
+        ####TODO compute bleu score
+        pred_a.append(np.transpose(ys_sampling))
+        print pred_a[0].shape
+      ### Compute Bleu score
+      print pred_a
+      bleu = utils.bleu_score(pred_a, actual_a, idx2w)
+      print blue
+      ########
+
+  
     if n % 100 == 0:
       ys_sampling = sess.run(sampling, feed_dict={question: idx_q_sample})
       for y_sampling in np.transpose(ys_sampling)[:10]:
@@ -116,6 +138,6 @@ for i in xrange(1, 1000):
         print a_sampling
 
       print 'Iter', n, ': ', loss
-    if n % 1000 == 0:
+    if n % 10000 == 0:
       saver.save(sess, 'models/chatbot_{:04d}.cpk'.format(n))
     n += 1
