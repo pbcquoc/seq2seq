@@ -101,12 +101,11 @@ train_q, train_a = idx_q[:-5000], idx_a[:-5000]
 test_q, test_a = idx_q[-5000:], idx_a[-5000:]
 
 #######
-pred_a = []
-actual_a = test_a[:batch_size*len(test_q)/batch_size]
+actual_a = test_a[:batch_size*int(len(test_q)/batch_size)]
 ####
 idx_q_sample = idx_q[:batch_size]
-for q in idx_q_sample:
-  print utils.idxs2str(q, idx2w)
+#for q in idx_q_sample:
+#  print utils.idxs2str(q, idx2w)
 
 print idx_q.shape, idx_a.shape
 n = 0
@@ -117,17 +116,18 @@ for i in xrange(1, 1000):
     
     _, loss = sess.run([optimizer, total_loss], feed_dict={question:batch_qs, answer:batch_as})
     if n % 100 == 0:
+      pred_a = []
       for batch in xrange(len(test_q)/batch_size):
         batch_qs = train_q[batch*batch_size:(batch+1)*batch_size]
 
         ys_sampling = sess.run(sampling, feed_dict={question: batch_qs})
         ####TODO compute bleu score
         pred_a.append(np.transpose(ys_sampling))
-        print pred_a[0].shape
       ### Compute Bleu score
-      print pred_a
+      pred_a = np.concatenate(pred_a, axis=0)
+      print pred_a.shape, actual_a.shape
       bleu = utils.bleu_score(pred_a, actual_a, idx2w)
-      print blue
+      print bleu
       ########
 
   

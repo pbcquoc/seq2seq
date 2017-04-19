@@ -105,10 +105,14 @@ def str2idxs(str, w2idx):
   return filtered
 
 def bleu_score(predicts, actuals, idx2w):
-  str_preds =  [idx2w[str(char)] for sentence in predicts for char in sentence]
-  str_actual = [idx2w[str(char)] for sentence in actuals for char in sentence]
+  
+  str_preds =  [idxs2chars(sentence, idx2w) for sentence in predicts]
+  str_actual = [idxs2chars(sentence, idx2w) for sentence in actuals]
+  
   scores = []
+  
   for i in xrange(len(str_preds)):
+    print len(str_actual[i]), len(str_preds[i]) 
     score = sentence_bleu(str_actual[i], str_preds[i])
     scores.append(score)
 
