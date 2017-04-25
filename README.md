@@ -30,5 +30,7 @@ python seq2seq.py
   > Q: this was my favorite play of his jumped off the screen  
   > A:  
   > Q: former president george hw bush said hell vote for hillary clinton according to sources close to bush  
-  > A:  
+  > A: 
+  > Q: sweet he should be here in his staff meeting now  
+  > A:   
 # Evaluate
