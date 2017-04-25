@@ -78,13 +78,14 @@ ys = linear(logits, shape=[mem_size, vocab_size], activation_fn=tf.identity, sco
 mask = tf.cast(tf.not_equal(answer_y, PAD), tf.float32)
 total_loss = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=ys, labels=answer_y)*mask
 total_loss = tf.reduce_mean(total_loss, name='total_loss')
+tf.summary.scalar('loss', total_loss)
 
 sampling = max_sampling(20)
 
 var =  tf.get_collection(tf.GraphKeys.VARIABLES)
 print [v.name for v in var], len(var)
 
-optimizer = tf.train.AdamOptimizer(learning_rate=1e-5).minimize(total_loss)
+optimizer = tf.train.AdamOptimizer(learning_rate=1e-4).minimize(total_loss)
 
 sess = tf.Session()
 sess.run(tf.initialize_all_variables())
@@ -94,6 +95,8 @@ sess.run(tf.initialize_all_variables())
 ###########
 summary_writer = tf.summary.FileWriter('logs/',graph_def=sess.graph_def)
 saver = tf.train.Saver()
+merged_summary_op = tf.summary.merge_all()
+
 #######
 idx_q = np.load('data/questions.npy')
 idx_a = np.load('data/answers.npy')
@@ -114,8 +117,10 @@ for i in xrange(1, 1000):
     batch_qs = train_q[batch*batch_size:(batch+1)*batch_size]
     batch_as = train_a[batch*batch_size:(batch+1)*batch_size]
     
-    _, loss = sess.run([optimizer, total_loss], feed_dict={question:batch_qs, answer:batch_as})
-    if n % 100 == 0:
+    _, loss, summary_op = sess.run([optimizer, total_loss, merged_summary_op], feed_dict={question:batch_qs, answer:batch_as})
+    summary_writer.add_summary(summary_op, i*len(train_q)/batch_size + batch)
+
+    if n % 1000 == 0:
       pred_a = []
       for batch in xrange(len(test_q)/batch_size):
         batch_qs = train_q[batch*batch_size:(batch+1)*batch_size]
@@ -125,19 +130,19 @@ for i in xrange(1, 1000):
         pred_a.append(np.transpose(ys_sampling))
       ### Compute Bleu score
       pred_a = np.concatenate(pred_a, axis=0)
-      print pred_a.shape, actual_a.shape
       bleu = utils.bleu_score(pred_a, actual_a, idx2w)
       print bleu
-      ########
 
-  
-    if n % 100 == 0:
-      ys_sampling = sess.run(sampling, feed_dict={question: idx_q_sample})
+      s_sampling = sess.run(sampling, feed_dict={question: idx_q_sample})
       for y_sampling in np.transpose(ys_sampling)[:10]:
         a_sampling = utils.idxs2str(y_sampling, idx2w)
         print a_sampling
 
+      ########
+ 
+    if n % 100 == 0:
       print 'Iter', n, ': ', loss
+
     if n % 10000 == 0:
       saver.save(sess, 'models/chatbot_{:04d}.cpk'.format(n))
     n += 1

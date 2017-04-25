@@ -1,0 +1,6 @@
+model_checkpoint_path: "chatbot_140000.cpk"
+all_model_checkpoint_paths: "chatbot_100000.cpk"
+all_model_checkpoint_paths: "chatbot_110000.cpk"
+all_model_checkpoint_paths: "chatbot_120000.cpk"
+all_model_checkpoint_paths: "chatbot_130000.cpk"
+all_model_checkpoint_paths: "chatbot_140000.cpk"

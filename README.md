@@ -5,6 +5,8 @@
   In training state, we forward questions and try to predict answers. The model is followed by
   ![GitHub Logo](http://suriyadeepan.github.io/img/seq2seq/seq2seq2.png)
 
+  In sampling pharse, i use multinomial distribution to sampling next word.
+
 # Dependencies
   * Python 2.7
   * Tensorflow 1.xx
@@ -14,5 +16,14 @@
   > Q : [ PAD, PAD, PAD, PAD, PAD, PAD, “?”, “you”, “are”, “How” ]  
   > A : [ GO, “I”, “am”, “fine”, “.”, EOS, PAD, PAD, PAD, PAD ]
 # Training
-  I use tensorflow so if you haven't installed tensorflow yet, just following the link and install approriate tensorflow for your pc
+  I use tensorflow so if you haven't installed tensorflow yet, just following the [link](https://www.tensorflow.org/install/) and install approriate tensorflow for your pc
+  To train model 
+```python
+python seq2seq.py
+```
+  Here i plot chart of cross-entropy loss. the loss go down at the end of training phase. It mean the model is learning somethings.
+  ![png](https://github.com/pbcquoc/pbcquoc.github.io/blob/master/media/img/seq2seq/training_phrase.png)
+
+  I show somes answers at iter
+  
 # Evaluate

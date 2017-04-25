@@ -112,7 +112,6 @@ def bleu_score(predicts, actuals, idx2w):
   scores = []
   
   for i in xrange(len(str_preds)):
-    print len(str_actual[i]), len(str_preds[i]) 
     score = sentence_bleu(str_actual[i], str_preds[i])
     scores.append(score)
 
