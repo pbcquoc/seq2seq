@@ -21,9 +21,14 @@
 ```python
 python seq2seq.py
 ```
-  Here i plot chart of cross-entropy loss. the loss go down at the end of training phase. It mean the model is learning somethings.
+  Here i plot chart of cross-entropy loss. the loss is still going down at the end of training phase. It mean the model is learning somethings.
   ![png](https://github.com/pbcquoc/pbcquoc.github.io/blob/master/media/img/seq2seq/training_phrase.png)
 
   I show somes answers at iter
-  
+  > Q: if youre gonna fall asleep in class just stay home  
+  > A: 
+  > Q: this was my favorite play of his jumped off the screen
+  > A:
+  > Q: former president george hw bush said hell vote for hillary clinton according to sources close to bush
+  > A:
 # Evaluate
