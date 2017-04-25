@@ -26,9 +26,9 @@ python seq2seq.py
 
   I show somes answers at iter
   > Q: if youre gonna fall asleep in class just stay home  
-  > A: 
-  > Q: this was my favorite play of his jumped off the screen
-  > A:
-  > Q: former president george hw bush said hell vote for hillary clinton according to sources close to bush
-  > A:
+  > A:  
+  > Q: this was my favorite play of his jumped off the screen  
+  > A:  
+  > Q: former president george hw bush said hell vote for hillary clinton according to sources close to bush  
+  > A:  
 # Evaluate
